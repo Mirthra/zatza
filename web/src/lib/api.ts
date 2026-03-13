@@ -72,6 +72,22 @@ export function getSavedArticles(): Promise<SavedArticle[]> {
   return apiFetch("/saved");
 }
 
+export async function saveArticle(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/saved/${id}`, {
+    method: "POST",
+    headers: { "X-API-Key": API_KEY },
+  });
+  if (!res.ok) throw new Error(`Save failed: ${res.status}`);
+}
+
+export async function unsaveArticle(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/saved/${id}`, {
+    method: "DELETE",
+    headers: { "X-API-Key": API_KEY },
+  });
+  if (!res.ok) throw new Error(`Unsave failed: ${res.status}`);
+}
+
 export interface Quote {
   name: string;
   symbol: string;

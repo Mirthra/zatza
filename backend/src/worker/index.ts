@@ -1,7 +1,7 @@
 import cron from "node-cron";
-import { eq } from "drizzle-orm";
+import { and, eq, lt, notInArray } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { sources } from "../db/schema.js";
+import { sources, articles, savedArticles } from "../db/schema.js";
 import { fetchRSS } from "./fetchers/rss.js";
 import { fetchNewsAPI } from "./fetchers/newsapi.js";
 import { fetchYouTube } from "./fetchers/youtube.js";
@@ -76,6 +76,25 @@ async function runFetchers(type?: SourceType) {
   );
 }
 
+async function purgeOldArticles() {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  // Find saved article IDs so we never delete them
+  const saved = await db.query.savedArticles.findMany({ columns: { articleId: true } });
+  const savedIds = saved.map((s) => s.articleId);
+
+  const whereClause = savedIds.length > 0
+    ? and(lt(articles.fetchedAt, cutoff), notInArray(articles.id, savedIds))
+    : lt(articles.fetchedAt, cutoff);
+
+  const deleted = await db
+    .delete(articles)
+    .where(whereClause)
+    .returning({ id: articles.id });
+
+  console.log(`[worker] Purged ${deleted.length} articles older than 24h`);
+}
+
 export function startWorker() {
   // RSS: every 30 minutes
   cron.schedule("*/30 * * * *", () => runFetchers("rss"));
@@ -89,10 +108,14 @@ export function startWorker() {
   // Stays comfortably under the 10k/day free quota
   cron.schedule("0 */4 * * *", () => runFetchers("youtube"));
 
+  // Purge articles older than 24h (except saved) — runs at 3am daily
+  cron.schedule("0 3 * * *", () => purgeOldArticles());
+
   console.log("Fetch worker started");
   console.log("  RSS:      every 30 minutes");
   console.log("  NewsAPI:  every hour");
   console.log("  YouTube:  every 4 hours");
+  console.log("  Purge:    daily at 3am");
 
   // Run everything immediately on startup
   runFetchers();

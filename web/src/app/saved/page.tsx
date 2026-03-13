@@ -15,6 +15,11 @@ export default function SavedPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  function handleToggle(id: string) {
+    // On the saved page, toggling always means unsaving — remove from list
+    setSaved((prev) => prev.filter((s) => s.articleId !== id));
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       <h1 className="text-lg font-semibold mb-4">Saved</h1>
@@ -29,7 +34,12 @@ export default function SavedPage() {
       ) : (
         <div className="divide-y divide-border">
           {saved.map((s) => (
-            <ArticleCard key={s.articleId} article={s.article} />
+            <ArticleCard
+              key={s.articleId}
+              article={s.article}
+              isSaved={true}
+              onToggleSaved={handleToggle}
+            />
           ))}
         </div>
       )}

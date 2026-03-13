@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { getArticles, type Article } from "@/lib/api";
+import { getArticles, getSavedArticles, type Article } from "@/lib/api";
 import { HeroCard, ArticleCard } from "./article-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +13,7 @@ interface Props {
 
 export function ArticleFeed({ category, type }: Props) {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -32,10 +33,11 @@ export function ArticleFeed({ category, type }: Props) {
     setCursor(null);
     setHasMore(true);
 
-    fetchPage().then((data) => {
+    Promise.all([fetchPage(), getSavedArticles()]).then(([data, saved]) => {
       setArticles(data.articles);
       setCursor(data.nextCursor);
       setHasMore(!!data.nextCursor);
+      setSavedIds(new Set(saved.map((s) => s.articleId)));
       setLoading(false);
     });
   }, [fetchPage]);
@@ -76,6 +78,14 @@ export function ArticleFeed({ category, type }: Props) {
   const [hero, ...rest] = articles;
   const showHero = !!hero.imageUrl;
 
+  function toggleSaved(id: string) {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
   return (
     <div>
       {articles[0]?.fetchedAt && (
@@ -91,7 +101,7 @@ export function ArticleFeed({ category, type }: Props) {
       {/* Hero */}
       {showHero && (
         <>
-          <HeroCard article={hero} />
+          <HeroCard article={hero} isSaved={savedIds.has(hero.id)} onToggleSaved={toggleSaved} />
           <Separator className="my-4" />
         </>
       )}
@@ -99,7 +109,7 @@ export function ArticleFeed({ category, type }: Props) {
       {/* Article list */}
       <div className="divide-y divide-border/60">
         {(showHero ? rest : articles).map((article) => (
-          <ArticleCard key={article.id} article={article} />
+          <ArticleCard key={article.id} article={article} isSaved={savedIds.has(article.id)} onToggleSaved={toggleSaved} />
         ))}
       </div>
 
