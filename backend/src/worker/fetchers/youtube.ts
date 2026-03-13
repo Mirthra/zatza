@@ -2,7 +2,12 @@ import { db } from "../../db/index.js";
 import { articles, sources } from "../../db/schema.js";
 import { createYouTubeClient } from "../../lib/youtube-auth.js";
 
-const youtube = createYouTubeClient();
+// Lazy — created on first use so missing env vars don't crash startup
+let youtube: ReturnType<typeof createYouTubeClient> | null = null;
+function getYouTube() {
+  if (!youtube) youtube = createYouTubeClient();
+  return youtube;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,7 +35,7 @@ export async function fetchYouTube(source: Source): Promise<number> {
   const playlistId = uploadsPlaylistId(source.identifier);
 
   // Step 1: Get recent video IDs + basic snippet from uploads playlist (1 quota unit)
-  const playlistRes = await youtube.playlistItems.list({
+  const playlistRes = await getYouTube().playlistItems.list({
     part: ["snippet"],
     playlistId,
     maxResults: 10,
@@ -44,7 +49,7 @@ export async function fetchYouTube(source: Source): Promise<number> {
     .filter((id): id is string => !!id);
 
   // Step 2: Get content details (duration) for all videos in one call (1 quota unit)
-  const detailsRes = await youtube.videos.list({
+  const detailsRes = await getYouTube().videos.list({
     part: ["contentDetails", "snippet"],
     id: videoIds,
   });
