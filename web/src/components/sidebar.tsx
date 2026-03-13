@@ -7,6 +7,7 @@ import { getCategories, type Category } from "@/lib/api";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Newspaper, Bookmark, Tv } from "lucide-react";
+import { WeatherWidget } from "@/components/weather-widget";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -23,6 +24,12 @@ export function Sidebar() {
         <Link href="/" className="text-xl font-bold tracking-tight">
           zatza
         </Link>
+      </div>
+
+      <Separator />
+
+      <div className="py-2">
+        <WeatherWidget />
       </div>
 
       <Separator />

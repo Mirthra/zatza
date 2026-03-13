@@ -9,6 +9,7 @@ import articlesRouter from "./api/routes/articles.js";
 import categoriesRouter from "./api/routes/categories.js";
 import sourcesRouter from "./api/routes/sources.js";
 import savedRouter from "./api/routes/saved.js";
+import quotesRouter from "./api/routes/quotes.js";
 
 const app = new Hono();
 
@@ -31,6 +32,7 @@ app.route("/articles", articlesRouter);
 app.route("/categories", categoriesRouter);
 app.route("/sources", sourcesRouter);
 app.route("/saved", savedRouter);
+app.route("/quotes", quotesRouter);
 
 const port = Number(process.env.PORT) || 3001;
 console.log(`Zatza backend running on port ${port}`);

@@ -71,3 +71,20 @@ export function getArticles(params: {
 export function getSavedArticles(): Promise<SavedArticle[]> {
   return apiFetch("/saved");
 }
+
+export interface Quote {
+  name: string;
+  symbol: string;
+  price: number;
+  change: number;
+  changePct: number;
+}
+
+export interface QuotesResponse {
+  quotes: Quote[];
+  fetchedAt: string;
+}
+
+export function getQuotes(): Promise<QuotesResponse> {
+  return apiFetch("/quotes");
+}

@@ -78,6 +78,16 @@ export function ArticleFeed({ category, type }: Props) {
 
   return (
     <div>
+      {articles[0]?.fetchedAt && (
+        <p className="text-xs text-muted-foreground mb-3">
+          Last updated:{" "}
+          {new Date(articles[0].fetchedAt).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })}
+        </p>
+      )}
       {/* Hero */}
       {showHero && (
         <>
